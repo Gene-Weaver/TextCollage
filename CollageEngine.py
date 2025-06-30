@@ -172,7 +172,7 @@ class CollageEngine:
                 for box in normal_boxes[class_name]:
                     x1, y1, x2, y2 = map(int, box); crops_for_collage.append({"img": original_image[y1:y2, x1:x2], "box": box, "class": class_name})
             if self.hide_long_objects and class_name in long_boxes:
-                 for box in long_boxes[class_name]:
+                for box in long_boxes[class_name]:
                     x1, y1, x2, y2 = map(int, box); crops_for_collage.append({"img": original_image[y1:y2, x1:x2], "box": box, "class": class_name})
 
         collage, positions = self._create_condensed_collage_from_crops(crops_for_collage)
@@ -185,8 +185,11 @@ class CollageEngine:
         if self.draw_overlay: collage = self.draw_overlay_on_collage(collage, final_output["position_collage"])
         
         # Always encode the image to a JPG byte stream in memory
-        success, jpg_bytes = cv2.imencode('.jpg', collage)
+        success, jpg_array = cv2.imencode('.jpg', collage)
         if not success: raise RuntimeError("Failed to encode collage image to JPG.")
+        
+        # Convert numpy array to actual bytes
+        jpg_bytes = jpg_array.tobytes()
         
         if self.output_path:
             # If a path is provided, write the bytes to disk

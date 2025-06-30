@@ -11,16 +11,6 @@ __pycache__/
 
 # Ultralytics Runs
 runs/
-*.pt
-*.onnx
-*.xml
-*.bin
-
-# Large Model Files
-*.pt
-*.onnx
-*.xml
-*.bin
 
 # Local IDE/OS files
 .vscode/

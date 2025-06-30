@@ -1,0 +1,28 @@
+# Virtual Environments
+/.venv_TC_windows/
+/.venv_TC_linux/
+/datasets/
+.venv*/
+venv/
+yolov12/
+# Python Caches
+__pycache__/
+*.pyc
+
+# Ultralytics Runs
+runs/
+*.pt
+*.onnx
+*.xml
+*.bin
+
+# Large Model Files
+*.pt
+*.onnx
+*.xml
+*.bin
+
+# Local IDE/OS files
+.vscode/
+.idea/
+*.DS_Store

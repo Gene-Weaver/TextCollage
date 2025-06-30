@@ -4,7 +4,7 @@
 /datasets/
 .venv*/
 venv/
-yolov12/
+
 # Python Caches
 __pycache__/
 *.pyc

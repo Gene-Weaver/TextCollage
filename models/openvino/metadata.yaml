@@ -1,0 +1,30 @@
+description: Ultralytics YOLOv12n model trained on datasets/PREP_final/PREP_final.yaml
+author: Ultralytics
+date: '2025-06-29T19:51:48.945376'
+version: 8.3.160
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: ruler
+  1: barcode
+  2: colorcard
+  3: label
+  4: map
+  5: envelope
+  6: photo
+  7: attached_item
+  8: weights
+args:
+  batch: 1
+  fraction: 1.0
+  half: false
+  int8: false
+  dynamic: false
+  nms: false
+channels: 3

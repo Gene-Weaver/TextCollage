@@ -213,7 +213,7 @@ class CollageEngine:
         return overlay
 
 if __name__ == "__main__":
-    model_path = "runs/detect/yolo12n/weights/best_openvino_model/best.xml"
+    model_path = "models/openvino/best.xml"
     image_to_process = "D:/D_Desktop/temp_50_2/ASC_3091209872_Hydrangeaceae_Philadelphus_microphyllus.jpg"
     classes_to_render = ['barcode', 'label', 'map']
 

@@ -199,7 +199,7 @@ class CollageEngine:
             # If no path, encode bytes to base64 and add to JSON output
             final_output['image_collage'] = base64.b64encode(jpg_bytes).decode('utf-8')
 
-        return final_output, jpg_bytes
+        return final_output
 
     def draw_overlay_on_collage(self, image, positions):
         overlay = image.copy()
@@ -240,10 +240,7 @@ if __name__ == "__main__":
         collage_classes=classes_to_render,
         output_path=None # Key change: No output file
     )
-    json_data_with_b64, image_bytes = engine_memory.run(image_to_process)
-    
-    # You can now use the image_bytes directly, e.g., in a web framework response
-    print(f"\nImage returned as {len(image_bytes)} bytes.")
+    json_data_with_b64 = engine_memory.run(image_to_process)
     
     # Or access the base64 string from the JSON
     if json_data_with_b64['image_collage']:

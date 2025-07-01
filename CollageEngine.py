@@ -3,6 +3,7 @@ import numpy as np
 import json
 from openvino import Core
 import base64
+import threading
 
 '''
 openvino
@@ -34,6 +35,8 @@ class CollageEngine:
         self.input_layer = self.compiled_model.input(0)
         self.output_layer = self.compiled_model.output(0)
 
+        self.inference_lock = threading.Lock()
+
     def preprocess_image(self, image):
         resized = cv2.resize(image, (640, 640))
         img = resized.transpose(2, 0, 1)
@@ -45,7 +48,8 @@ class CollageEngine:
         if original_image is None: raise ValueError(f"Image not found at {image_path}")
         original_height, original_width, _ = original_image.shape
         input_tensor = self.preprocess_image(original_image)
-        outputs = self.compiled_model([input_tensor])[self.output_layer]
+        with self.inference_lock:
+            outputs = self.compiled_model([input_tensor])[self.output_layer]
         predictions = np.squeeze(outputs).T
 
         boxes, confidences, class_ids = [], [], []

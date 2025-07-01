@@ -168,7 +168,7 @@ class CollageEngine:
         merged_boxes = {c: self.merge_overlapping_boxes(b) for c, b in raw_boxes.items() if b}
         
         normal_boxes, long_boxes = self.partition_by_aspect_ratio(merged_boxes) if self.hide_long_objects else (merged_boxes, {n: [] for n in self.all_possible_classes})
-        final_output = {"position_original": merged_boxes, "position_collage": {}, "image_collage": None}
+        final_output = {"position_original": merged_boxes, "position_collage": {}, "base64image_text_collage": None}
 
         crops_for_collage = []
         for class_name in self.collage_classes:
@@ -201,7 +201,7 @@ class CollageEngine:
                 f.write(jpg_bytes)
         else:
             # If no path, encode bytes to base64 and add to JSON output
-            final_output['image_collage'] = base64.b64encode(jpg_bytes).decode('utf-8')
+            final_output['base64image_text_collage'] = base64.b64encode(jpg_bytes).decode('utf-8')
 
         return final_output
 
@@ -247,7 +247,7 @@ if __name__ == "__main__":
     json_data_with_b64 = engine_memory.run(image_to_process)
     
     # Or access the base64 string from the JSON
-    if json_data_with_b64['image_collage']:
+    if json_data_with_b64['base64image_text_collage']:
         print("Base64 image string is present in the JSON output.")
         # print(json.dumps(json_data_with_b64, indent=2)) # This would be very long, so we skip printing it all
     else:

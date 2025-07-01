@@ -228,7 +228,7 @@ if __name__ == "__main__":
         engine="gpt",
         output_path="out.jpg"
     )
-    json_data, _ = engine_file.run(image_to_process)
+    json_data = engine_file.run(image_to_process)
     print("JSON output (file mode):")
     print(json.dumps(json_data, indent=2))
     print("\nImage saved to out.jpg")

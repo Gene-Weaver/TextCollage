@@ -204,6 +204,24 @@ class CollageEngine:
             final_output['base64image_text_collage'] = base64.b64encode(jpg_bytes).decode('utf-8')
 
         return final_output
+    
+    def run_fake(self, image_path): # Produce the same output without making the collage
+        original_image = cv2.imread(image_path)
+        final_output = {"position_original": {}, "position_collage": {}, "base64image_text_collage": None}
+
+        # Always encode the image to a JPG byte stream in memory
+        success, jpg_array = cv2.imencode('.jpg', original_image)
+        if not success: raise RuntimeError("Failed to encode collage image to JPG.")
+        # Convert numpy array to actual bytes
+        jpg_bytes = jpg_array.tobytes()
+        if self.output_path:
+            # If a path is provided, write the bytes to disk
+            with open(self.output_path, 'wb') as f:
+                f.write(jpg_bytes) 
+        else:
+            # If no path, encode bytes to base64 and add to JSON output
+            final_output['base64image_text_collage'] = base64.b64encode(jpg_bytes).decode('utf-8')
+        return final_output
 
     def draw_overlay_on_collage(self, image, positions):
         overlay = image.copy()
@@ -237,6 +255,17 @@ if __name__ == "__main__":
     print(json.dumps(json_data, indent=2))
     print("\nImage saved to out.jpg")
 
+    engine_file = CollageEngine(
+            model_xml_path=model_path,
+            collage_classes=classes_to_render,
+            engine="gpt",
+            output_path="out_fake.jpg"
+        )
+    json_data = engine_file.run_fake(image_to_process)
+    print("JSON output (file mode):")
+    print(json.dumps(json_data, indent=2))
+    print("\nImage saved to out_fake.jpg")
+
     # --- Example 2: Return in memory ---
     print("\n--- Running Example 2: Returning data in memory ---")
     engine_memory = CollageEngine(
@@ -245,6 +274,7 @@ if __name__ == "__main__":
         output_path=None # Key change: No output file
     )
     json_data_with_b64 = engine_memory.run(image_to_process)
+    json_data_with_b64_fake = engine_memory.run_fake(image_to_process)
     
     # Or access the base64 string from the JSON
     if json_data_with_b64['base64image_text_collage']:

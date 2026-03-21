@@ -105,8 +105,8 @@ class CollageEngine:
         return normal_boxes, long_boxes
 
     def _create_condensed_collage_from_crops(self, crops):
-        if not crops: return None, {name: [] for name in self.all_possible_classes}
-        positions = {name: [] for name in self.all_possible_classes}; rows = []
+        if not crops: return None, {}
+        positions = {}; rows = []
         crops.sort(key=lambda c: c["box"][1])
         for crop in crops:
             placed = False; y1, y2 = crop["box"][1], crop["box"][3]
@@ -127,7 +127,7 @@ class CollageEngine:
             x_off = 0
             for c in row["crops"]:
                 h, w = c["img"].shape[:2]; canvas[y_off:y_off + h, x_off:x_off + w] = c["img"]
-                positions[c["class"]].append([x_off, y_off, x_off + w, y_off + h])
+                positions.setdefault(c["class"], []).append([x_off, y_off, x_off + w, y_off + h])
                 x_off += w
             y_off += row_dims[i][1]
         return canvas, positions
@@ -170,19 +170,38 @@ class CollageEngine:
         normal_boxes, long_boxes = self.partition_by_aspect_ratio(merged_boxes) if self.hide_long_objects else (merged_boxes, {n: [] for n in self.all_possible_classes})
         final_output = {"position_original": merged_boxes, "position_collage": {}, "base64image_text_collage": None}
 
-        crops_for_collage = []
+        # Collect all per-class boxes destined for the collage
+        all_collage_entries = []
         for class_name in self.collage_classes:
             if class_name in normal_boxes:
                 for box in normal_boxes[class_name]:
-                    x1, y1, x2, y2 = map(int, box); crops_for_collage.append({"img": original_image[y1:y2, x1:x2], "box": box, "class": class_name})
+                    all_collage_entries.append((box, class_name))
             if self.hide_long_objects and class_name in long_boxes:
                 for box in long_boxes[class_name]:
-                    x1, y1, x2, y2 = map(int, box); crops_for_collage.append({"img": original_image[y1:y2, x1:x2], "box": box, "class": class_name})
+                    all_collage_entries.append((box, class_name))
 
-        collage, positions = self._create_condensed_collage_from_crops(crops_for_collage)
+        # Merge across classes so overlapping regions aren't duplicated in the collage
+        merged_regions = self.merge_overlapping_boxes([b for b, _ in all_collage_entries])
+        region_crops = []
+        for i, region in enumerate(merged_regions):
+            x1, y1, x2, y2 = map(int, region)
+            region_crops.append({"img": original_image[y1:y2, x1:x2], "box": region, "class": f"_r{i}"})
 
+        collage, region_positions = self._create_condensed_collage_from_crops(region_crops)
         if collage is None: raise RuntimeError("No collage could be created.")
-        
+
+        # Map original per-class boxes back to their collage positions
+        # Use unique keys per region so ordering from sort/row-layout doesn't matter
+        region_mapping = [(merged_regions[i], region_positions[f"_r{i}"][0]) for i in range(len(merged_regions))]
+        positions = {name: [] for name in self.all_possible_classes}
+        for orig_box, class_name in all_collage_entries:
+            for region, collage_pos in region_mapping:
+                if (orig_box[0] >= region[0] and orig_box[1] >= region[1] and
+                    orig_box[2] <= region[2] and orig_box[3] <= region[3]):
+                    dx, dy = collage_pos[0] - region[0], collage_pos[1] - region[1]
+                    positions[class_name].append([orig_box[0] + dx, orig_box[1] + dy, orig_box[2] + dx, orig_box[3] + dy])
+                    break
+
         collage, scale = self.resize_for_engine(collage)
         final_output["position_collage"] = {c: [[int(coord * scale) for coord in box] for box in bboxes] for c, bboxes in positions.items()}
 

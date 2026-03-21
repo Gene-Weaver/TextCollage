@@ -4,7 +4,8 @@
 /datasets/
 .venv*/
 venv/
-
+wandb/
+deprecated/
 # Python Caches
 __pycache__/
 *.pyc

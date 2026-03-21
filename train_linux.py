@@ -12,6 +12,22 @@ The easiest way to fix this is to tell NCCL not to use direct P2P and instead ro
 This is slightly slower but far more reliable on many systems.
 
 NCCL_P2P_DISABLE=1 YOLO_DEVICE='0,1' python train_linux.py
+
+@article{tian2025yolov12,
+  title={YOLOv12: Attention-Centric Real-Time Object Detectors},
+  author={Tian, Yunjie and Ye, Qixiang and Doermann, David},
+  journal={arXiv preprint arXiv:2502.12524},
+  year={2025}
+}
+
+@software{yolo12,
+  author = {Tian, Yunjie and Ye, Qixiang and Doermann, David},
+  title = {YOLOv12: Attention-Centric Real-Time Object Detectors},
+  year = {2025},
+  url = {https://github.com/sunsmarterjie/yolov12},
+  license = {AGPL-3.0}
+}
+
 '''
 
 if __name__ == '__main__':

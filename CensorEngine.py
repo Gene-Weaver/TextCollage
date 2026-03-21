@@ -48,7 +48,7 @@ class CensorEngine:
             box_coords, class_probs = pred[:4], pred[4:]
             class_id = np.argmax(class_probs)
             confidence = class_probs[class_id]
-            if confidence > 0.25:
+            if confidence > 0.5:
                 cx, cy, w, h = box_coords
                 x1 = int((cx - w / 2) * x_scale); y1 = int((cy - h / 2) * y_scale)
                 x2 = int((cx + w / 2) * x_scale); y2 = int((cy + h / 2) * y_scale)
@@ -56,7 +56,7 @@ class CensorEngine:
                 confidences.append(float(confidence))
                 class_ids.append(class_id)
 
-        indices = cv2.dnn.NMSBoxes(boxes, confidences, score_threshold=0.25, nms_threshold=0.45)
+        indices = cv2.dnn.NMSBoxes(boxes, confidences, score_threshold=0.5, nms_threshold=0.45)
         final_boxes = {name: [] for name in self.all_possible_classes}
         if len(indices) > 0:
             for i in indices.flatten():

@@ -7,12 +7,14 @@ import threading
 class CensorEngine:
     all_possible_classes = ['ruler', 'barcode', 'colorcard', 'label', 'map', 'envelope', 'photo', 'attached_item', 'weights']
 
-    def __init__(self, model_xml_path, censor_classes=None):
+    def __init__(self, model_xml_path, censor_classes=None, debug_censor=False):
         """
         Args:
             model_xml_path: Path to the OpenVINO .xml model file.
             censor_classes: List of class name strings to censor. If None, all classes are censored.
+            debug_censor: If True, draw bounding boxes with class names and confidence labels after censoring.
         """
+        self.debug_censor = debug_censor
         if censor_classes is None:
             self.censor_classes = list(self.all_possible_classes)
         else:
@@ -58,12 +60,14 @@ class CensorEngine:
 
         indices = cv2.dnn.NMSBoxes(boxes, confidences, score_threshold=0.5, nms_threshold=0.45)
         final_boxes = {name: [] for name in self.all_possible_classes}
+        final_confs = {name: [] for name in self.all_possible_classes}
         if len(indices) > 0:
             for i in indices.flatten():
                 x, y, w, h = boxes[i]
                 class_name = self.all_possible_classes[class_ids[i]]
                 final_boxes[class_name].append([x, y, x + w, y + h])
-        return final_boxes
+                final_confs[class_name].append(confidences[i])
+        return final_boxes, final_confs
 
     def run(self, image_path, output_path=None):
         """
@@ -80,7 +84,7 @@ class CensorEngine:
         if image is None:
             raise ValueError(f"Image not found at {image_path}")
 
-        boxes_by_class = self.get_bounding_boxes(image)
+        boxes_by_class, confs_by_class = self.get_bounding_boxes(image)
 
         for class_name in self.censor_classes:
             for box in boxes_by_class.get(class_name, []):
@@ -88,6 +92,19 @@ class CensorEngine:
                 x1 = max(0, x1); y1 = max(0, y1)
                 x2 = min(image.shape[1], x2); y2 = min(image.shape[0], y2)
                 image[y1:y2, x1:x2] = 0
+
+        if self.debug_censor:
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            for class_name in self.censor_classes:
+                for box, conf in zip(boxes_by_class.get(class_name, []), confs_by_class.get(class_name, [])):
+                    x1, y1, x2, y2 = box
+                    x1 = max(0, x1); y1 = max(0, y1)
+                    x2 = min(image.shape[1], x2); y2 = min(image.shape[0], y2)
+                    cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                    label = f"{class_name} {conf:.2f}"
+                    (tw, th), _ = cv2.getTextSize(label, font, 0.5, 1)
+                    cv2.rectangle(image, (x1, y1 - th - 4), (x1 + tw, y1), (0, 0, 255), -1)
+                    cv2.putText(image, label, (x1, y1 - 2), font, 0.5, (255, 255, 255), 1)
 
         if output_path:
             cv2.imwrite(output_path, image)
